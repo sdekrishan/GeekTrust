@@ -2,37 +2,56 @@ const fs = require("fs")
 const filename = process.argv[2]
 
 fs.readFile(filename, "utf8", (err, data) => {
+    //we extract the data and store it in array so that we can divide our data into desired fields
  const allData = data.trim().split("\r");
+
+ //extract all data related to our programmes
  const programmes = allData.filter((el)=>el.includes('ADD_PROGRAMME')).map((el)=>el.split(" ").slice(1));
+
+ //extract all data related to coupons 
  const couponData = allData.filter((el)=>el.includes('APPLY_COUPON')).map((el)=>el.split(" ").slice(1).join(""));
+
+ // extract data of pro membership so that we can define we acquire pro membership or not
  const proMembership = allData.filter((el)=>el.includes('ADD_PRO_MEMBERSHIP'));
+
+ // we made an object because it is easy to identify which course has how many quantity;
  let programObj = {};
  
- programmes.forEach(el=>programObj[el[0]]=Number(el[1]))
- 
+ //setting our object
+ programmes.forEach(el=>programObj[el[0]]=Number(el[1]));
+
+
+ // with the help of subtotal function we get our subtotol Amount
  const subTotalAmt = subTotal(programObj);
+
+ // we creating a set here so that we can check how many unique coupon we have 
  let couponSet = new Set(couponData);
+
+ // pro membership discount 
  let proDiscount = proMemeberShipDiscount(programObj,proMembership)
+
+ //pro membership fees
  let proMembershipFee = proMembershipFees(proMembership).toFixed(2)
+
+ // coupon discount
  const coupon_discount = couponDiscount(programObj,couponSet);
- let coupondis = coupon_discount.split(" ").map(Number)[1];
+ let coupondis = coupon_discount.split(" ")[1]
+
+ // calculatin the total amt here
  let total = subTotalAmt - coupondis - proDiscount
 
+// calculation enrollment fees amt here
  let enrollment_fees = total < 6666 ? 500 : 0;
- let ans = [`SUB_TOTAL ${subTotalAmt.toFixed(2)}`,`COUPON_DISCOUNT ${coupon_discount}`,`TOTAL_PRO_DISCOUNT ${proDiscount}`,`PRO_MEMBERSHIP_FEE ${proMembershipFee}`,`ENROLLMENT_FEE ${(enrollment_fees).toFixed(2)}` ,`TOTAL ${(total-enrollment_fees).toFixed(2)}`];
 
- console.log(ans.join("\n"));
+ // putting our ans in an array so that we can print them easily
+ let output = [`SUB_TOTAL ${subTotalAmt.toFixed(2)}`,`COUPON_DISCOUNT ${coupon_discount}`,`TOTAL_PRO_DISCOUNT ${proDiscount}`,`PRO_MEMBERSHIP_FEE ${proMembershipFee}`,`ENROLLMENT_FEE ${(enrollment_fees).toFixed(2)}` ,`TOTAL ${(total-enrollment_fees).toFixed(2)}`];
+
+ // printing the output
+ console.log(output.join("\n"));
 
 })
 
-function proMembershipFees (proMembership){
-    if(proMembership.length > 0){
-        return 200
-    }
-    else{
-        return 0
-    }
-}
+
 
 function subTotal(obj){
     let amount = 0;
@@ -116,6 +135,15 @@ function proMemeberShipDiscount (obj,proMembership){
     }
 
     return proDiscount.toFixed(2)
+}
+
+function proMembershipFees (proMembership){
+    if(proMembership.length > 0){
+        return 200
+    }
+    else{
+        return 0
+    }
 }
 
 function b4G1Discount (obj){
